@@ -1,0 +1,313 @@
+#include<stdio.h>
+
+int swap_player(int player,char *mark){
+    if(player == 0){ *mark = 'O';}
+    else if(player == 1){ *mark = 'X';}
+    return !player;
+}
+int choose_player(int player,char *mark){
+    printf("Choose player(either 0 or 1): ");
+    scanf("%d",&player);
+    if(player == 0){ *mark = 'X';}
+    if(player == 1){ *mark = 'O';}
+    if(player !=0 && player !=1){
+        printf("Invalid choice\n");
+        return choose_player(player,mark);
+    }
+    else
+    return player;
+}
+void set_board(int row,int column,char* Board , int* Plate){
+
+    char k = '1';
+    int i,j;
+    for( i = 0; i<row ; i++){
+        for( j = 0 ; j < column ; j++){
+            *(Board+i*column+j) = k;
+
+            Plate[i*column+j] = 2;
+            k++;
+        }
+    }
+
+}
+void display_board(int row,int column,char* Board,int* Plate){
+	int i,j;
+    for( i=0;i<row;i++){
+        for( j=0;j<column;j++){
+            printf("%c ",Board[i*column+j]);
+
+        }
+        printf("\n");
+    }
+    //printf("\n\n");
+    //for( i=0;i<row;i++){
+        //for( j=0;j<column;j++){
+          //  printf("%d ",Plate[i*column+j]);
+
+        //}
+      //  printf("\n");
+    //}
+}
+int isempty(int row,int column,char* Board){
+	int i,j;
+    for( i=0;i<row;i++){
+        for( j=0;j<column;j++){
+            if(Board[i*column+j] != 'X' && Board[i*column+j] != 'O' )
+            return 1;
+        }
+    }
+    return 0;
+}
+int winner(int row,int column,char* Board,int* place_filled){
+	int i,j;
+    //Horizontal check;
+    for( i=0;i<row;i++){
+        if(Board[i*column+0]==Board[i*column+1] && Board[i*column+1]==Board[i*column+2]){
+            return 1;
+        }
+    }
+    //Vertical check;
+    for( i=0;i<column;i++){
+        if(Board[0*column+i] == Board[1*column+i] && Board[1*column+i] == Board[2*column+i]){
+            return 1;
+        }
+    }
+    //Diagonal check;
+    if(Board[0*column+0] == Board[1*column+1] && Board[1*column+1]== Board[2*column+2]){
+
+        return 1;
+    }
+    if(Board[0*column+2] == Board[1*column+1] && Board[1*column+1] == Board[2*column+0]){
+        return 1;
+    }
+    //Checking draw condition;
+    if(!isempty(row,column,Board)){
+        *place_filled = 1;
+        return 1;
+    }
+    return 0;
+}
+void game_play(int row,int column,char* Board,int* Plate,char mark){
+	int i,j;
+    printf("Select position to mark: ");
+    int position;
+    scanf("%d",&position);
+    for( i=0;i<row;i++){
+        for( j=0;j<column;j++){
+            int place = ((i*3)+(j+1));
+            if(position == place && (Board[i*column+j] !='X' && Board[i*column+j] !='O')){
+                Board[i*column+j] = mark;
+                Plate[i*column+j] = 1;
+                return;
+            }
+            if(position == place && (Board[i*column+j] =='X' || Board[i*column+j] =='O')){
+                printf("Invalid move!:X:X:X:X:X:X:X:");
+                game_play(row,column,Board,Plate,mark);
+            }
+        }
+    }
+    return;
+}
+void play_with_human(){
+    const int row = 3, column = 3;
+    int place_filled=0;
+    char Board[row][column];
+    int Plate[row][column];
+    set_board(row,column,(char*)Board,(int*)Plate);
+
+    char mark;
+    int player = choose_player(player,&mark);
+    int key = 1;
+    while(key){
+        display_board(row,column,(char*)Board,(int*)Plate);
+        printf("Take your move player %d\n",player);
+        game_play(row,column,(char*)Board,(int*)Plate,mark);
+        if(winner(row,column,(char*)Board,&place_filled)){
+            if(place_filled == 1){
+                printf("Game draw!!!\n");
+            }
+            else{
+                printf("%d is winner\n",player);
+            }
+            display_board(row,column,(char*)Board,(int*)Plate);
+            key = 0;
+        }
+        player = swap_player(player,&mark);
+
+    }
+    return;
+
+}
+//-----------------------------------------------------------------------------------------
+void gameplay_computer(int row,int column,int* Plate,char* Board,char mark){
+    int selected_row,selected_column,i,j,multi=1,max_mul=1;
+    int reset = 0;
+    for(i=0;i<row;i++){
+        for(j=0;j<column;j++){
+            if(Plate[i*column+j] ==3 || Plate[i*column+j] == 1){
+                continue;
+            }
+            if(Plate[i*column+j] == 2){
+                Plate[i*column+j] = 3;
+                multi = Plate[i*column+0]*Plate[i*column+1]*Plate[i*column+2]; //Horizontal check
+                if(multi == 27){
+                    Board[i*column+j] = mark;
+                    return;
+                }
+                else if(max_mul < multi){
+                    max_mul = multi;
+                    selected_row = i;
+                    selected_column = j;
+                }
+                multi = Board[0*column+j]*Board[1*column+j]*Board[2*column+j]; //vertical check
+                if(multi == 27){
+                    Board[i*column+j] = mark;
+                    return;
+                }
+                else if(max_mul < multi){
+                    max_mul = multi;
+                    selected_row = i;
+                    selected_column = j;
+                }
+                if(i == j){
+                    multi = Plate[0*column+0]*Plate[1*column+1]*Plate[2*column+2];
+                    if(multi == 27){
+                        Board[i*column+j] = mark;
+                        return;
+                    }
+                    else if(max_mul < multi){
+                        max_mul = multi;
+                        selected_row = i;
+                        selected_column = j;
+                    }
+                }
+                if((i==0 && j==2) || (i==1 && j==1) || (i==2 && j==0)){
+                    multi = Plate[0*column+2]*Plate[1*column+1]*Plate[2*column+0];
+                    if(multi == 27){
+                        Board[i*column+j] = mark;
+                        return;
+                    }
+                    else if(max_mul < multi){
+                        max_mul = multi;
+                        selected_row = i;
+                        selected_column = j;
+                    }
+                }
+
+
+            }
+            Plate[i*column+j] = 2;
+        }
+
+    }
+    for(i=0;i<row;i++){
+        for(j=0;j<column;j++){
+            if(Plate[i*column+j] ==3 || Plate[i*column+j] == 1){
+                continue;
+            }
+            if(Plate[i*column+j] == 2){
+                Plate[i*column+j] = 3;
+                multi = Plate[i*column+0]*Plate[i*column+1]*Plate[i*column+2]; //Horizontal check
+                if(multi == 3){
+
+                    Board[i*column+j] = mark;
+                    return;
+                }
+                multi = Plate[0*column+j]*Plate[1*column+j]*Plate[2*column+j]; //vertical check
+                if(multi == 3){
+
+                    Board[i*column+j] = mark;
+                    return;
+                }
+                if(i == j){
+                    multi = Plate[0*column+0]*Plate[1*column+1]*Plate[2*column+2];
+                    if(multi == 3){
+
+                        Board[i*column+j] = mark;
+                        return;
+                    }
+                }
+                if((i==0 && j==2) || (i==1 && j==1) || (i==2 && j==0)){
+                    multi = Plate[0*column+2]*Plate[1*column+1]*Plate[2*column+0];
+                    if(multi == 3){
+
+                        Board[i*column+j] = mark;
+                        return;
+                    }
+                }
+
+
+            }
+
+            Plate[i*column+j] = 2;
+        }
+
+    }
+    Board[selected_row*column+selected_column] = mark;
+    Plate[selected_row*column+selected_column] = 3;
+
+
+    return;
+
+}
+void play_with_computer(){
+    int row = 3, column = 3;
+    int place_filled=0;
+    char Board[row][column];
+    int Plate[row][column];
+    int index;
+    set_board(row,column,(char*)Board,(int*)Plate);
+
+    char mark;
+    int player = choose_player(player,&mark);
+    int key = 1;
+    while(key){
+        display_board(row,column,(char*)Board,(int*)Plate);
+        printf("Take your move player %d\n",player);
+        game_play(row,column,(char*)Board,(int*)Plate,mark);
+        if(winner(row,column,(char*)Board,&place_filled)){
+            if(place_filled == 1){
+                printf("Game draw!!!\n");
+            }
+            else{
+                printf("%d is winner\n",player);
+            }
+            display_board(row,column,(char*)Board,(int*)Plate);
+            key = 0;
+        }
+        if(key == 0){
+            break;
+        }
+        player = swap_player(player,&mark);
+        gameplay_computer(row,column,(int*)Plate,(char*)Board,mark);
+        if(winner(row,column,(char*)Board,&place_filled)){
+            if(place_filled == 1){
+                printf("Game draw!!!\n");
+            }
+            else{
+                printf("%d is winner\n",player);
+            }
+            display_board(row,column,(char*)Board,(int*)Plate);
+            key = 0;
+        }
+        player = swap_player(player,&mark);
+    }
+    return;
+}
+void play_with_evil_computer(){
+
+}
+
+
+
+
+
+int main(){
+     //play_with_human();
+    play_with_computer();
+    //play_with_evil_computer();
+
+
+
+}
