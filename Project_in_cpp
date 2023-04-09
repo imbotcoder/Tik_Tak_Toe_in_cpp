@@ -1,313 +1,398 @@
 #include<stdio.h>
+#include<conio.h>
+#include<cstdlib>
 
-int swap_player(int player,char *mark){
-    if(player == 0){ *mark = 'O';}
-    else if(player == 1){ *mark = 'X';}
-    return !player;
-}
-int choose_player(int player,char *mark){
-    printf("Choose player(either 0 or 1): ");
-    scanf("%d",&player);
-    if(player == 0){ *mark = 'X';}
-    if(player == 1){ *mark = 'O';}
-    if(player !=0 && player !=1){
-        printf("Invalid choice\n");
-        return choose_player(player,mark);
+char square[3][3] = {
+                     {'1','2','3'},
+                     {'4','5','6'},
+                     {'7','8','9'}
+                    };
+
+int board[3][3] = {
+                     {2,2,2},
+                     {2,2,2},
+                     {2,2,2}
+                  };
+int player = 0, i ,choice , isEvil = 0 , isEvilMarked = 0 , reset = 0 , flag = 0, withPlayer = 0;
+char mark;
+void resetBoard();
+int checkWinner();
+void drawBoard();
+void selectPlayer();
+void enterChoice();
+void selectMark();
+void fillMark();
+void gameStatus();
+int isPlaceEmpty();
+
+void findComputerMove()
+{
+    int row,col,selectedRow , selectedCol,i,j , multi = 1, maxMul =1;
+    for(row =0 ; row <3 ; row++)
+    {
+        for(col =0; col <3; col++)
+        {
+            // reset
+           // maxMul = 1;
+            if(board[row][col] == 2)
+            {
+               board[row][col] = 3;
+               multi = board[row][0]* board[row][1]*board[row][2];
+               // Computer Win Condition or Saving opponent win
+               if( multi == 27)
+               {
+                   square[row][col] = 'X';
+                   return;
+               } else if(maxMul < multi)
+               {
+                   maxMul = multi;
+                   selectedRow = row;
+                   selectedCol = col;
+               }
+
+               multi = board[0][col]* board[1][col]*board[2][col];
+               // Computer Win Condition or Saving opponent win
+               if( multi == 27)
+               {
+                   square[row][col] = 'X';
+                   return;
+               } else if(maxMul < multi)
+               {
+                   maxMul = multi;
+                   selectedRow = row;
+                   selectedCol = col;
+               }
+
+               if(row == col)
+               {
+                multi = board[0][0]* board[1][1]*board[2][2];
+               // Computer Win Condition or Saving opponent win
+                if( multi == 27)
+                 {
+                   square[row][col] = 'X';
+                   return;
+                 }else if(maxMul < multi)
+                 {
+                   maxMul = multi;
+                   selectedRow = row;
+                   selectedCol = col;
+                 }
+               }
+
+                 if((row ==0 && col ==2) || (row ==2 && col ==0) || (row == 1 && col ==1))
+                 {
+
+                    multi = board[0][2]* board[1][1]*board[2][0];
+               // Computer Win Condition or Saving opponent win
+                    if( multi == 27)
+                    {
+                    square[row][col] = 'X';
+                    return;
+                    } else if(maxMul < multi)
+                    {
+                    maxMul = multi;
+                    selectedRow = row;
+                    selectedCol = col;
+                    }
+                 }
+
+                board[row][col] = 2;
+            }
+        }
     }
+
+    // check opponent win
+     for(row =0 ; row <3 ; row++)
+    {
+        for(col =0; col <3; col++)
+        {
+            if(board[row][col] == 2)
+            {
+               board[row][col] = 3;
+               multi = board[row][0]* board[row][1]*board[row][2];
+               // Computer Win Condition or Saving opponent win
+               if(multi == 3)
+               {
+			       reset = 1;
+                   square[row][col] = 'X';
+
+                   if(isEvil == 0)
+                    return;
+                   else
+                    isEvilMarked = 1;
+               }
+
+               multi = board[0][col]* board[1][col]*board[2][col];
+               if(multi == 3)
+               {   reset = 1;
+                   square[row][col] = 'X';
+                   if(isEvil == 0)
+                    return;
+                   else
+                    isEvilMarked = 1;
+               }
+
+               if(row == col)
+               {
+                multi = board[0][0]* board[1][1]*board[2][2];
+                if( multi == 3)
+                 { reset = 1;
+                   square[row][col] = 'X';
+                   if(isEvil == 0)
+                    return;
+                   else
+                     isEvilMarked = 1;
+                 }
+               }
+
+                 if((row ==0 && col ==2) || (row ==2 && col ==0) || (row == 1 && col ==1))
+                 {
+
+                    multi = board[0][2]* board[1][1]*board[2][0];
+                    if(multi == 3)
+                    {
+                     reset = 1;
+                     square[row][col] = 'X';
+                     if(isEvil == 0)
+                      return;
+                     else
+                      isEvilMarked = 1;
+                    }
+                 }
+                 if(isEvilMarked == 0)
+                   board[row][col] = 2;
+
+                   isEvilMarked = 0;
+            }
+        }
+    }
+        if(reset == 0)
+        {
+          board[selectedRow][selectedCol] = 3;
+          square[selectedRow][selectedCol] = 'X';
+        }
+        else
+           reset = 0;
+}
+
+
+int isPlaceEmpty(int row, int col)
+{
+    if(square[row][col] != 'X' && square[row][col] !='O')
+        return 1;
     else
-    return player;
+        return 0;
 }
-void set_board(int row,int column,char* Board , int* Plate){
 
-    char k = '1';
-    int i,j;
-    for( i = 0; i<row ; i++){
-        for( j = 0 ; j < column ; j++){
-            *(Board+i*column+j) = k;
-
-            Plate[i*column+j] = 2;
-            k++;
-        }
-    }
-
+void enterChoice()
+{
+    printf("Player %d, Enter Marking Place : ",player);
+    fflush(stdin);
+    scanf("%d",&choice);
+    fflush(stdin);
 }
-void display_board(int row,int column,char* Board,int* Plate){
-	int i,j;
-    for( i=0;i<row;i++){
-        for( j=0;j<column;j++){
-            printf("%c ",Board[i*column+j]);
 
-        }
-        printf("\n");
-    }
-    //printf("\n\n");
-    //for( i=0;i<row;i++){
-        //for( j=0;j<column;j++){
-          //  printf("%d ",Plate[i*column+j]);
-
-        //}
-      //  printf("\n");
-    //}
+void selectPlayer()
+{
+   player = !player;
 }
-int isempty(int row,int column,char* Board){
-	int i,j;
-    for( i=0;i<row;i++){
-        for( j=0;j<column;j++){
-            if(Board[i*column+j] != 'X' && Board[i*column+j] != 'O' )
-            return 1;
-        }
-    }
-    return 0;
+
+void selectMark()
+{
+    mark = (player == 1) ? 'O' : 'X';
 }
-int winner(int row,int column,char* Board,int* place_filled){
-	int i,j;
-    //Horizontal check;
-    for( i=0;i<row;i++){
-        if(Board[i*column+0]==Board[i*column+1] && Board[i*column+1]==Board[i*column+2]){
-            return 1;
-        }
-    }
-    //Vertical check;
-    for( i=0;i<column;i++){
-        if(Board[0*column+i] == Board[1*column+i] && Board[1*column+i] == Board[2*column+i]){
-            return 1;
-        }
-    }
-    //Diagonal check;
-    if(Board[0*column+0] == Board[1*column+1] && Board[1*column+1]== Board[2*column+2]){
 
-        return 1;
-    }
-    if(Board[0*column+2] == Board[1*column+1] && Board[1*column+1] == Board[2*column+0]){
-        return 1;
-    }
-    //Checking draw condition;
-    if(!isempty(row,column,Board)){
-        *place_filled = 1;
-        return 1;
-    }
-    return 0;
+void gameStatus()
+{
+    if(i==1){
+		printf("Player %d won",--player);
+	}
+	else {
+		printf("Game draw");
+	}
+
+	 printf("\n\n#####################################################\n\n");
 }
-void game_play(int row,int column,char* Board,int* Plate,char mark){
-	int i,j;
-    printf("Select position to mark: ");
-    int position;
-    scanf("%d",&position);
-    for( i=0;i<row;i++){
-        for( j=0;j<column;j++){
-            int place = ((i*3)+(j+1));
-            if(position == place && (Board[i*column+j] !='X' && Board[i*column+j] !='O')){
-                Board[i*column+j] = mark;
-                Plate[i*column+j] = 1;
-                return;
-            }
-            if(position == place && (Board[i*column+j] =='X' || Board[i*column+j] =='O')){
-                printf("Invalid move!:X:X:X:X:X:X:X:");
-                game_play(row,column,Board,Plate,mark);
-            }
+
+int checkWinner(){
+    // Checking Horizontal match
+    int row = 0 , col = 0 , placeFilled = 1;
+    for(row = 0 ; row < 3 ; row++)
+    {
+        if(square[row][0] == square[row][1] && square[row][1] == square[row][2])
+		return 1;
+    }
+
+    // checking vertical match
+    for(col = 0 ; col < 3 ; col++)
+    {
+        if(square[0][col] == square[1][col] && square[1][col] == square[2][col])
+		return 1;
+    }
+
+	// Checking diagonal match
+    if(square[0][0] == square[1][1] && square[1][1] == square[2][2])
+		return 1;
+	else if(square[0][2] == square[1][1] && square[1][1] == square[2][0])
+		return 1;
+
+    // checking that no place is vacant now
+
+     for(row = 0 ; row < 3 ; row++)
+    {
+        for(col = 0 ; col < 3 ; col++)
+        {
+            if(isPlaceEmpty(row,col))
+                {
+                    placeFilled = 0;
+
+                }
         }
     }
-    return;
+    // placeFilled == 0 means board not filled completely
+    // Return 0 if board is filled completely else return -1
+ 	if(placeFilled == 1)
+		return 0;
+	else
+		return -1;
 }
-void play_with_human(){
-    const int row = 3, column = 3;
-    int place_filled=0;
-    char Board[row][column];
-    int Plate[row][column];
-    set_board(row,column,(char*)Board,(int*)Plate);
 
-    char mark;
-    int player = choose_player(player,&mark);
-    int key = 1;
-    while(key){
-        display_board(row,column,(char*)Board,(int*)Plate);
-        printf("Take your move player %d\n",player);
-        game_play(row,column,(char*)Board,(int*)Plate,mark);
-        if(winner(row,column,(char*)Board,&place_filled)){
-            if(place_filled == 1){
-                printf("Game draw!!!\n");
-            }
-            else{
-                printf("%d is winner\n",player);
-            }
-            display_board(row,column,(char*)Board,(int*)Plate);
-            key = 0;
-        }
-        player = swap_player(player,&mark);
+void drawBoard(){
+    // Clearing Screen for re-drawing new board
 
+    int row = 0;
+	// system("cls");
+	printf("\n\n#################### Tic Tac Toe ####################\n\n");
+	printf("First Player X \nSecond Player O \n\n\n");
+
+	for(row = 0 ; row < 3 ; row++)
+    {
+           printf("     |     |     \n");
+	       printf("  %c  |  %c  |  %c  \n",square[row][0],square[row][1],square[row][2]);
+	       printf("_____|_____|_____\n");
     }
-    return;
 
-}
-//-----------------------------------------------------------------------------------------
-void gameplay_computer(int row,int column,int* Plate,char* Board,char mark){
-    int selected_row,selected_column,i,j,multi=1,max_mul=1;
-    int reset = 0;
-    for(i=0;i<row;i++){
-        for(j=0;j<column;j++){
-            if(Plate[i*column+j] ==3 || Plate[i*column+j] == 1){
-                continue;
-            }
-            if(Plate[i*column+j] == 2){
-                Plate[i*column+j] = 3;
-                multi = Plate[i*column+0]*Plate[i*column+1]*Plate[i*column+2]; //Horizontal check
-                if(multi == 27){
-                    Board[i*column+j] = mark;
-                    return;
-                }
-                else if(max_mul < multi){
-                    max_mul = multi;
-                    selected_row = i;
-                    selected_column = j;
-                }
-                multi = Board[0*column+j]*Board[1*column+j]*Board[2*column+j]; //vertical check
-                if(multi == 27){
-                    Board[i*column+j] = mark;
-                    return;
-                }
-                else if(max_mul < multi){
-                    max_mul = multi;
-                    selected_row = i;
-                    selected_column = j;
-                }
-                if(i == j){
-                    multi = Plate[0*column+0]*Plate[1*column+1]*Plate[2*column+2];
-                    if(multi == 27){
-                        Board[i*column+j] = mark;
-                        return;
-                    }
-                    else if(max_mul < multi){
-                        max_mul = multi;
-                        selected_row = i;
-                        selected_column = j;
-                    }
-                }
-                if((i==0 && j==2) || (i==1 && j==1) || (i==2 && j==0)){
-                    multi = Plate[0*column+2]*Plate[1*column+1]*Plate[2*column+0];
-                    if(multi == 27){
-                        Board[i*column+j] = mark;
-                        return;
-                    }
-                    else if(max_mul < multi){
-                        max_mul = multi;
-                        selected_row = i;
-                        selected_column = j;
-                    }
-                }
-
-
-            }
-            Plate[i*column+j] = 2;
-        }
-
-    }
-    for(i=0;i<row;i++){
-        for(j=0;j<column;j++){
-            if(Plate[i*column+j] ==3 || Plate[i*column+j] == 1){
-                continue;
-            }
-            if(Plate[i*column+j] == 2){
-                Plate[i*column+j] = 3;
-                multi = Plate[i*column+0]*Plate[i*column+1]*Plate[i*column+2]; //Horizontal check
-                if(multi == 3){
-
-                    Board[i*column+j] = mark;
-                    return;
-                }
-                multi = Plate[0*column+j]*Plate[1*column+j]*Plate[2*column+j]; //vertical check
-                if(multi == 3){
-
-                    Board[i*column+j] = mark;
-                    return;
-                }
-                if(i == j){
-                    multi = Plate[0*column+0]*Plate[1*column+1]*Plate[2*column+2];
-                    if(multi == 3){
-
-                        Board[i*column+j] = mark;
-                        return;
-                    }
-                }
-                if((i==0 && j==2) || (i==1 && j==1) || (i==2 && j==0)){
-                    multi = Plate[0*column+2]*Plate[1*column+1]*Plate[2*column+0];
-                    if(multi == 3){
-
-                        Board[i*column+j] = mark;
-                        return;
-                    }
-                }
-
-
-            }
-
-            Plate[i*column+j] = 2;
-        }
-
-    }
-    Board[selected_row*column+selected_column] = mark;
-    Plate[selected_row*column+selected_column] = 3;
-
-
-    return;
-
-}
-void play_with_computer(){
-    int row = 3, column = 3;
-    int place_filled=0;
-    char Board[row][column];
-    int Plate[row][column];
-    int index;
-    set_board(row,column,(char*)Board,(int*)Plate);
-
-    char mark;
-    int player = choose_player(player,&mark);
-    int key = 1;
-    while(key){
-        display_board(row,column,(char*)Board,(int*)Plate);
-        printf("Take your move player %d\n",player);
-        game_play(row,column,(char*)Board,(int*)Plate,mark);
-        if(winner(row,column,(char*)Board,&place_filled)){
-            if(place_filled == 1){
-                printf("Game draw!!!\n");
-            }
-            else{
-                printf("%d is winner\n",player);
-            }
-            display_board(row,column,(char*)Board,(int*)Plate);
-            key = 0;
-        }
-        if(key == 0){
-            break;
-        }
-        player = swap_player(player,&mark);
-        gameplay_computer(row,column,(int*)Plate,(char*)Board,mark);
-        if(winner(row,column,(char*)Board,&place_filled)){
-            if(place_filled == 1){
-                printf("Game draw!!!\n");
-            }
-            else{
-                printf("%d is winner\n",player);
-            }
-            display_board(row,column,(char*)Board,(int*)Plate);
-            key = 0;
-        }
-        player = swap_player(player,&mark);
-    }
-    return;
-}
-void play_with_evil_computer(){
-
+	printf("\n\n#####################################################\n\n");
 }
 
 
 
 
+void fillMark()
+{
+    int row = 0 , col = 0;
+    int place = 0;
+    int flag = 0;
+    for(row = 0 ; row < 3 ; row++)
+    {
+        for(col = 0 ; col < 3 ; col++)
+        {
+            // Formula used to find the place.
+            // How this formula comes will be explained in class
+            place = ((row * 3) + (col +1));
+
+            // checking the choice and place is empty or not
+            if((choice == place) && isPlaceEmpty(row,col))
+            {
+                 square[row][col] = mark;
+                 board[row][col] = 1;
+                 flag = 1; // Mark done
+            }
+        }
+    }
+
+    // Mark not done means Invalid option
+    if(flag == 0)
+    {
+      printf("\n\n#####################################################\n\n");
+      printf("Place is Either already used or incorrect !");
+      getch();
+      if(withPlayer == 0)
+      player--;
+    }else{
+      i = checkWinner();
+      if(withPlayer == 0)
+        player++;
+      else
+        selectPlayer();
+     }
+}
+
+void resetBoard()
+{
+    int row, col;
+    char a = '1';
+    for(row = 0 ; row < 3 ; row++)
+    {
+        for(col = 0 ; col < 3 ; col++)
+        {
+
+        square[row][col] = a++;
+        board[row][col] = 2;
+        }
+    }
+ player = 0,isEvil = 0 , isEvilMarked = 0 , reset = 0 , flag = 0, withPlayer = 0;
+}
 
 int main(){
-     //play_with_human();
-    play_with_computer();
-    //play_with_evil_computer();
+    int choice ;
+    while(1)
+    {
+        system("cls");
+        resetBoard();
+        printf("Enter your choice\n");
+        printf("1. Want to play with Smart Computer\n");
+        printf("2. Want to play with Evil Computer\n");
+        printf("3. Want to play with player\n");
+        printf("4. Exit\n");
+        scanf("%d",&choice);
 
+        switch(choice)
+        {
+            case 1 :
+            case 2 :  isEvil = (choice == 1 ) ? 0 : 1;
+                       do {
+                        drawBoard();
+                        selectPlayer();
+                        if(player == 0)
+                        {
+                            findComputerMove();
+                            i = checkWinner();
+                            if(i == 1)
+                            player++;
+                        }else{
+                            enterChoice();
+                            selectMark();
+                            fillMark();
+                        }
+                        }while(i == -1);
 
+                        drawBoard();
+                        gameStatus();
+                        getchar();
+                        break;
 
+            case 3 :
+                       withPlayer = 1;
+                       selectPlayer();
+                       selectMark();
+                     do {
+                        drawBoard();
+                        selectMark();
+                        enterChoice();
+                        fillMark();
+                        }while(i == -1);
+                        drawBoard();
+                        gameStatus();
+                        getchar();
+                break;
+            case 4 :
+                exit(0);
+                break;
+            default: printf("Invalid choice\n");
+        }
+
+    }
+
+	return 0;
 }
